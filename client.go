@@ -31,7 +31,9 @@
 package zerokit
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/go-errors/errors"
 	"io/ioutil"
 	"net/http"
@@ -42,12 +44,13 @@ import (
 const (
 	listTresorMembers        = "/api/v4/admin/tresor/list-members"
 	initiateUserRegistration = "/api/v4/admin/user/init-user-registration"
+	approveTresorCreation    = "/api/v4/admin/tresor/approve-tresor-creation"
 )
 
 type tresoritClient struct {
 	requestSigner
 	httpClient httpClient
-	ServiceUrl string
+	ServiceUrl *url.URL
 }
 
 type httpClient interface {
@@ -59,14 +62,42 @@ func NewTresoritClient(serviceUrl, adminUserId, adminKey string) (*tresoritClien
 		return nil, errors.New("one or more arguments are empty")
 	}
 
+	u, err := url.Parse(serviceUrl)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid service url: %s", serviceUrl))
+	}
+
 	return &tresoritClient{
 		requestSigner: requestSigner{
 			adminKey:    adminKey,
 			adminUserId: adminUserId,
 		},
 		httpClient: http.DefaultClient,
-		ServiceUrl: serviceUrl,
+		ServiceUrl: u,
 	}, nil
+}
+
+func (c *tresoritClient) doSignedPost(urlPath string,
+	body []byte) (*http.Response, error) {
+	endpoint := c.ServiceUrl
+	endpoint.Path = path.Join(endpoint.Path, urlPath)
+	r, err := http.NewRequest("POST", endpoint.String(), bytes.NewBuffer(body))
+	if err != nil {
+		return nil, err
+	}
+	return c.SignAndDo(r)
+}
+
+func (c *tresoritClient) doSignedGet(urlPath string,
+	query url.Values) (*http.Response, error) {
+	endpoint := c.ServiceUrl
+	endpoint.Path = path.Join(endpoint.Path, urlPath)
+	r, err := http.NewRequest("GET", endpoint.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	r.URL.RawQuery = query.Encode()
+	return c.SignAndDo(r)
 }
 
 func (c *tresoritClient) SignAndDo(req *http.Request) (*http.Response, error) {
@@ -78,20 +109,10 @@ func (c *tresoritClient) SignAndDo(req *http.Request) (*http.Response, error) {
 }
 
 func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
-	u, err := url.Parse(c.ServiceUrl)
-	if err != nil {
-		return nil, err
-	}
-	u.Path = path.Join(u.Path, listTresorMembers)
-	r, err := http.NewRequest("GET", u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	q := r.URL.Query()
+	q := url.Values{}
 	q.Add("tresorid", tresorId)
-	r.URL.RawQuery = q.Encode()
 
-	resp, err := c.SignAndDo(r)
+	resp, err := c.doSignedGet(listTresorMembers, q)
 	if err != nil {
 		return nil, err
 	}
@@ -115,20 +136,12 @@ type UserRegistrationData struct {
 	UserId          string `json:"UserId"`
 }
 
-func (z *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
-	u, err := url.Parse(z.ServiceUrl)
+func (c *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
+	resp, err := c.doSignedPost(initiateUserRegistration, nil)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = path.Join(u.Path, initiateUserRegistration)
-	r, err := http.NewRequest("POST", u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	resp, err := z.SignAndDo(r)
-	if err != nil {
-		return nil, err
-	}
+	defer resp.Body.Close()
 
 	var reg UserRegistrationData
 	decoder := json.NewDecoder(resp.Body)
@@ -136,7 +149,20 @@ func (z *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	defer resp.Body.Close()
 	return &reg, nil
+}
+
+func (c *tresoritClient) ApproveTresorCreation(tresorId string) error {
+	m := map[string]string{"TresorId": tresorId}
+	body, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.doSignedPost(approveTresorCreation, body)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
 }
