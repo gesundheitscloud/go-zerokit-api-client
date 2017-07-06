@@ -82,7 +82,6 @@ func TestListTresorMembers(t *testing.T) {
 	if err != nil {
 		t.Fatal("cannot initialize tresorit client")
 	}
-	// package protected
 	c.httpClient = client
 
 	members, err := c.ListTresorMembers(tresorId)
@@ -106,7 +105,7 @@ func TestInitUserRegistration(t *testing.T) {
 		UserId:          "zk",
 	}
 
-	// mock list members response
+	// mock init user registration response
 	client := &mockHttpClient{
 		DoMock: func(req *http.Request) (*http.Response, error) {
 			body, _ := json.Marshal(expected)
@@ -120,7 +119,6 @@ func TestInitUserRegistration(t *testing.T) {
 	if err != nil {
 		t.Fatal("cannot initialize tresorit client")
 	}
-	// package protected
 	c.httpClient = client
 
 	reg, err := c.InitUserRegistration()
@@ -140,5 +138,41 @@ func TestInitUserRegistration(t *testing.T) {
 
 	if reg.SessionId != expected.SessionId {
 		t.Errorf("SessionId = %s, want = %s", reg.SessionId, expected.SessionId)
+	}
+}
+
+func TestApproveTresorCreation(t *testing.T) {
+	tresorId := "0000slpj4r86xbqlg9wmjhug"
+
+	// mock approve tresor creation response
+	client := &mockHttpClient{
+		DoMock: func(req *http.Request) (*http.Response, error) {
+			m := map[string]string{}
+			body, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				t.Errorf("malformed request's body %v", err)
+			}
+			err = json.Unmarshal(body, &m)
+			if err != nil {
+				t.Errorf("invalid request's body %s", string(body))
+			}
+			if m["TresorId"] != tresorId {
+				t.Errorf("TresorId = %s, want = %s", m["TresorId"], tresorId)
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer([]byte(""))),
+			}, nil
+		},
+	}
+	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	if err != nil {
+		t.Fatal("cannot initialize tresorit client")
+	}
+	c.httpClient = client
+
+	err = c.ApproveTresorCreation(tresorId)
+	if err != nil {
+		t.Errorf("approve tresor creation must not fail, was = %v", err)
 	}
 }
