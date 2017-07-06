@@ -73,7 +73,7 @@ func TestListTresorMembers(t *testing.T) {
 			m["Members"] = append(m["Members"], tresorMembers...)
 			body, _ := json.Marshal(m)
 			return &http.Response{
-				StatusCode: http.StatusBadRequest,
+				StatusCode: http.StatusOK,
 				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
 			}, nil
 		},
@@ -96,5 +96,49 @@ func TestListTresorMembers(t *testing.T) {
 	if !reflect.DeepEqual(members, tresorMembers) {
 		t.Errorf(
 			"tresor's members = %v, want = %v", members, tresorMembers)
+	}
+}
+
+func TestInitUserRegistration(t *testing.T) {
+	expected := UserRegistrationData{
+		SessionVerifier: "session",
+		SessionId:       "verifier",
+		UserId:          "zk",
+	}
+
+	// mock list members response
+	client := &mockHttpClient{
+		DoMock: func(req *http.Request) (*http.Response, error) {
+			body, _ := json.Marshal(expected)
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer(body)),
+			}, nil
+		},
+	}
+	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	if err != nil {
+		t.Fatal("cannot initialize tresorit client")
+	}
+	// package protected
+	c.httpClient = client
+
+	reg, err := c.InitUserRegistration()
+	if err != nil {
+		t.Errorf("user registration initialziation must not fail, was %v", err)
+	}
+	if reg.UserId != expected.UserId {
+		t.Errorf("UserId = %s, want = %s", reg.UserId, expected.UserId)
+	}
+
+	if reg.SessionVerifier != expected.SessionVerifier {
+		t.Errorf(
+			"SessionVerifier = %s, want = %s",
+			reg.SessionVerifier, expected.SessionVerifier,
+		)
+	}
+
+	if reg.SessionId != expected.SessionId {
+		t.Errorf("SessionId = %s, want = %s", reg.SessionId, expected.SessionId)
 	}
 }
