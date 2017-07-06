@@ -15,6 +15,7 @@ For further information please see:
 Implemented Tresorit API methods:
 
  - ListMembers
+ - InitUserRegistration
 
 ## Examples
 

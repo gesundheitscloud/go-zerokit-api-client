@@ -39,7 +39,10 @@ import (
 	"path"
 )
 
-const ListTresorMembers = "/api/v4/admin/tresor/list-members"
+const (
+	listTresorMembers        = "/api/v4/admin/tresor/list-members"
+	initiateUserRegistration = "/api/v4/admin/user/init-user-registration"
+)
 
 type tresoritClient struct {
 	requestSigner
@@ -79,7 +82,7 @@ func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	u.Path = path.Join(u.Path, ListTresorMembers)
+	u.Path = path.Join(u.Path, listTresorMembers)
 	r, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return nil, err
@@ -104,4 +107,36 @@ func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
 		return nil, err
 	}
 	return m["Members"], nil
+}
+
+type UserRegistrationData struct {
+	SessionVerifier string `json:"RegSessionVerifier"`
+	SessionId       string `json:"RegSessionId"`
+	UserId          string `json:"UserId"`
+}
+
+func (z *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
+	u, err := url.Parse(z.ServiceUrl)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path.Join(u.Path, initiateUserRegistration)
+	r, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := z.SignAndDo(r)
+	if err != nil {
+		return nil, err
+	}
+
+	var reg UserRegistrationData
+	decoder := json.NewDecoder(resp.Body)
+	err = decoder.Decode(&reg)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	return &reg, nil
 }
