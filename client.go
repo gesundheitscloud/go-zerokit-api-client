@@ -31,14 +31,20 @@
 package zerokit
 
 import (
+	"encoding/json"
 	"github.com/go-errors/errors"
+	"io/ioutil"
 	"net/http"
+	"net/url"
+	"path"
 )
+
+const ListTresorMembers = "/api/v4/admin/tresor/list-members"
 
 type tresoritClient struct {
 	requestSigner
 	httpClient httpClient
-	serviceUrl string
+	ServiceUrl string
 }
 
 type httpClient interface {
@@ -56,7 +62,7 @@ func NewTresoritClient(serviceUrl, adminUserId, adminKey string) (*tresoritClien
 			adminUserId: adminUserId,
 		},
 		httpClient: http.DefaultClient,
-		serviceUrl: serviceUrl,
+		ServiceUrl: serviceUrl,
 	}, nil
 }
 
@@ -66,4 +72,36 @@ func (c *tresoritClient) SignAndDo(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 	return c.httpClient.Do(req)
+}
+
+func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
+	u, err := url.Parse(c.ServiceUrl)
+	if err != nil {
+		return nil, err
+	}
+	u.Path = path.Join(u.Path, ListTresorMembers)
+	r, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	q := r.URL.Query()
+	q.Add("tresorid", tresorId)
+	r.URL.RawQuery = q.Encode()
+
+	resp, err := c.SignAndDo(r)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	m := map[string][]string{}
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m["Members"], nil
 }
