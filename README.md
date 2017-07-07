@@ -17,6 +17,7 @@ Implemented Tresorit API methods:
  - ListMembers
  - InitUserRegistration
  - ApproveTresorCreation
+ - ValidateUser
 
 ## Examples
 

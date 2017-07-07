@@ -59,7 +59,6 @@ func TestListTresorMembers(t *testing.T) {
 	tresorId := "xyz"
 	tresorMembers := []string{"zk1", "zk2"}
 
-	// mock list members response
 	client := &mockHttpClient{
 		DoMock: func(req *http.Request) (*http.Response, error) {
 			tresorIdActual := req.URL.Query().Get("tresorid")
@@ -105,7 +104,6 @@ func TestInitUserRegistration(t *testing.T) {
 		UserId:          "zk",
 	}
 
-	// mock init user registration response
 	client := &mockHttpClient{
 		DoMock: func(req *http.Request) (*http.Response, error) {
 			body, _ := json.Marshal(expected)
@@ -144,7 +142,6 @@ func TestInitUserRegistration(t *testing.T) {
 func TestApproveTresorCreation(t *testing.T) {
 	tresorId := "0000slpj4r86xbqlg9wmjhug"
 
-	// mock approve tresor creation response
 	client := &mockHttpClient{
 		DoMock: func(req *http.Request) (*http.Response, error) {
 			m := map[string]string{}
@@ -174,5 +171,45 @@ func TestApproveTresorCreation(t *testing.T) {
 	err = c.ApproveTresorCreation(tresorId)
 	if err != nil {
 		t.Errorf("approve tresor creation must not fail, was = %v", err)
+	}
+}
+
+func TestValidateUserRegistration(t *testing.T) {
+	client := &mockHttpClient{
+		DoMock: func(req *http.Request) (*http.Response, error) {
+			body, err := ioutil.ReadAll(req.Body)
+			if err != nil {
+				t.Errorf("malformed request's body %v", err)
+			}
+
+			expectedSha := "048da140252fed8175ed24579acece9542636b0022a0918617" +
+				"bb42d5290f9cc4"
+			if sha256hex(body) != expectedSha {
+				t.Errorf(
+					"body sha256 = %s, want = %s",
+					sha256hex(body),
+					expectedSha,
+				)
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       ioutil.NopCloser(bytes.NewBuffer([]byte(""))),
+			}, nil
+		},
+	}
+	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	if err != nil {
+		t.Fatal("cannot initialize tresorit client")
+	}
+	c.httpClient = client
+
+	err = c.ValidateUserRegistration(
+		"zk",
+		"session",
+		"verfier",
+		"validation",
+	)
+	if err != nil {
+		t.Errorf("validate user registration must not fail, was = %v", err)
 	}
 }
