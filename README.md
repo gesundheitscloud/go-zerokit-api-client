@@ -24,75 +24,75 @@ Implemented Tresorit API methods:
 Initiate a user registration process:
  
 ```go
-    package main
+package main
 
-    import (
-        "net/url"
-        "io/ioutil"
-        "github.com/hpihc/go-tresorit-api-client"
-        "path"
-        "net/http"
-        "fmt"
+import (
+    "net/url"
+    "io/ioutil"
+    "github.com/hpihc/go-tresorit-api-client"
+    "path"
+    "net/http"
+    "fmt"
+)
+
+func main() {
+    client, err := zerokit.NewTresoritClient(
+        "https://example.api.tresorit.io",
+        "admin@example.tresorit.io",
+        "fsdfq34r2efe",
     )
-
-    func main() {
-        client, err := zerokit.NewTresoritClient(
-            "https://example.api.tresorit.io",
-            "admin@example.tresorit.io",
-            "fsdfq34r2efe",
-        )
-        if err != nil {
-            return err
-        }
-        u, err := url.Parse(client.ServiceUrl)
-        if err != nil {
-            return err
-        }
-        u.Path = path.Join(u.Path, "/api/v4/admin/user/init-user-registration")
-        r, err := http.NewRequest("POST", u.String(), nil)
-        if err != nil {
-            return err
-        }
-
-        resp, err := client.SignAndDo(r)
-        if err != nil {
-            return err
-        }
-        defer resp.Body.Close()
-
-        // do something with response
-        body, err := ioutil.ReadAll(resp.Body)
-        if err != nil {
-            return err
-        }
-        fmt.Println(string(body))
+    if err != nil {
+        return err
     }
+    u, err := url.Parse(client.ServiceUrl)
+    if err != nil {
+        return err
+    }
+    u.Path = path.Join(u.Path, "/api/v4/admin/user/init-user-registration")
+    r, err := http.NewRequest("POST", u.String(), nil)
+    if err != nil {
+        return err
+    }
+
+    resp, err := client.SignAndDo(r)
+    if err != nil {
+        return err
+    }
+    defer resp.Body.Close()
+
+    // do something with response
+    body, err := ioutil.ReadAll(resp.Body)
+    if err != nil {
+        return err
+    }
+    fmt.Println(string(body))
+}
 ```
 
 Lists all members of the given tresor using implemented Tresorit API methods:
 
 ```go
-    package main
+package main
 
-    import (
-        "github.com/hpihc/go-tresorit-api-client"
-        "fmt"
+import (
+    "github.com/hpihc/go-tresorit-api-client"
+    "fmt"
+)
+
+func main() {
+    client, err := zerokit.NewTresoritClient(
+        "https://example.api.tresorit.io",
+        "admin@example.tresorit.io",
+        "fsdfq34r2efe",
     )
-
-    func main() {
-        client, err := zerokit.NewTresoritClient(
-            "https://example.api.tresorit.io",
-            "admin@example.tresorit.io",
-            "fsdfq34r2efe",
-        )
-        if err != nil {
-            return err
-        }
-
-        members, err := client.ListTresorMembers("0000slpj4r86xbqlg9wmjhug")
-        if err != nil {
-            return err
-        }
-        fmt.Println(members)
+    if err != nil {
+        return err
     }
+
+    members, err := client.ListTresorMembers("0000slpj4r86xbqlg9wmjhug")
+    if err != nil {
+        return err
+    }
+    fmt.Println(members)
+}
 ```
