@@ -42,10 +42,10 @@ import (
 )
 
 const (
-	listTresorMembers        = "/api/v4/admin/tresor/list-members"
-	initiateUserRegistration = "/api/v4/admin/user/init-user-registration"
-	approveTresorCreation    = "/api/v4/admin/tresor/approve-tresor-creation"
-	validateUserRegistration = "/api/v4/admin/user/validate-user-registration"
+	ListTresorMembersPath = "/api/v4/admin/tresor/list-members"
+	InitiateUserRegistrationPath = "/api/v4/admin/user/init-user-registration"
+	ApproveTresorCreationPath = "/api/v4/admin/tresor/approve-tresor-creation"
+	ValidateUserRegistrationPath = "/api/v4/admin/user/validate-user-registration"
 )
 
 type tresoritClient struct {
@@ -113,7 +113,7 @@ func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
 	q := url.Values{}
 	q.Add("tresorid", tresorId)
 
-	resp, err := c.doSignedGet(listTresorMembers, q)
+	resp, err := c.doSignedGet(ListTresorMembersPath, q)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
 }
 
 func (c *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
-	resp, err := c.doSignedPost(initiateUserRegistration, nil)
+	resp, err := c.doSignedPost(InitiateUserRegistrationPath, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (c *tresoritClient) ApproveTresorCreation(tresorId string) error {
 		return err
 	}
 
-	resp, err := c.doSignedPost(approveTresorCreation, body)
+	resp, err := c.doSignedPost(ApproveTresorCreationPath, body)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (c *tresoritClient) ValidateUserRegistration(zeroKitId, sessionId,
 		return err
 	}
 
-	resp, err := c.doSignedPost(validateUserRegistration, body)
+	resp, err := c.doSignedPost(ValidateUserRegistrationPath, body)
 	if err != nil {
 		return err
 	}
