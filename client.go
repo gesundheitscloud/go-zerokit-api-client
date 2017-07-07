@@ -45,12 +45,13 @@ const (
 	listTresorMembers        = "/api/v4/admin/tresor/list-members"
 	initiateUserRegistration = "/api/v4/admin/user/init-user-registration"
 	approveTresorCreation    = "/api/v4/admin/tresor/approve-tresor-creation"
+	validateUserRegistration = "/api/v4/admin/user/validate-user-registration"
 )
 
 type tresoritClient struct {
 	requestSigner
 	httpClient httpClient
-	ServiceUrl *url.URL
+	ServiceUrl url.URL
 }
 
 type httpClient interface {
@@ -73,7 +74,7 @@ func NewTresoritClient(serviceUrl, adminUserId, adminKey string) (*tresoritClien
 			adminUserId: adminUserId,
 		},
 		httpClient: http.DefaultClient,
-		ServiceUrl: u,
+		ServiceUrl: *u,
 	}, nil
 }
 
@@ -130,12 +131,6 @@ func (c *tresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
 	return m["Members"], nil
 }
 
-type UserRegistrationData struct {
-	SessionVerifier string `json:"RegSessionVerifier"`
-	SessionId       string `json:"RegSessionId"`
-	UserId          string `json:"UserId"`
-}
-
 func (c *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
 	resp, err := c.doSignedPost(initiateUserRegistration, nil)
 	if err != nil {
@@ -152,6 +147,12 @@ func (c *tresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
 	return &reg, nil
 }
 
+type UserRegistrationData struct {
+	SessionId       string `json:"RegSessionId"`
+	SessionVerifier string `json:"RegSessionVerifier"`
+	UserId          string `json:"UserId"`
+}
+
 func (c *tresoritClient) ApproveTresorCreation(tresorId string) error {
 	m := map[string]string{"TresorId": tresorId}
 	body, err := json.Marshal(m)
@@ -165,4 +166,56 @@ func (c *tresoritClient) ApproveTresorCreation(tresorId string) error {
 	}
 	defer resp.Body.Close()
 	return nil
+}
+
+func (c *tresoritClient) ValidateUserRegistration(zeroKitId, sessionId,
+	sessionVerifier, validationVerifier string) error {
+	m := orderedMap{
+		{"RegSessionId", sessionId},
+		{"RegSessionVerifier", sessionVerifier},
+		{"RegValidationVerifier", validationVerifier},
+		{"UserId", zeroKitId},
+	}
+	body, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.doSignedPost(validateUserRegistration, body)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
+type orderedMap []mapItem
+
+type mapItem struct {
+	key   string
+	value interface{}
+}
+
+func (m orderedMap) MarshalJSON() ([]byte, error) {
+	var buffer bytes.Buffer
+	buffer.WriteString("{")
+	for i, item := range m {
+		if i != 0 {
+			buffer.WriteString(",")
+		}
+		key, err := json.Marshal(item.key)
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(key)
+		buffer.WriteString(":")
+		val, err := json.Marshal(item.value)
+		if err != nil {
+			return nil, err
+		}
+		buffer.Write(val)
+	}
+
+	buffer.WriteString("}")
+	return buffer.Bytes(), nil
 }
