@@ -77,7 +77,7 @@ func TestListTresorMembers(t *testing.T) {
 			}, nil
 		},
 	}
-	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	c, err := NewZeroKitAdminApiClient(ServiceUrl, AdminUserId, AdminKey)
 	if err != nil {
 		t.Fatal("cannot initialize tresorit client")
 	}
@@ -113,7 +113,7 @@ func TestInitUserRegistration(t *testing.T) {
 			}, nil
 		},
 	}
-	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	c, err := NewZeroKitAdminApiClient(ServiceUrl, AdminUserId, AdminKey)
 	if err != nil {
 		t.Fatal("cannot initialize tresorit client")
 	}
@@ -162,7 +162,7 @@ func TestApproveTresorCreation(t *testing.T) {
 			}, nil
 		},
 	}
-	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	c, err := NewZeroKitAdminApiClient(ServiceUrl, AdminUserId, AdminKey)
 	if err != nil {
 		t.Fatal("cannot initialize tresorit client")
 	}
@@ -197,7 +197,7 @@ func TestValidateUserRegistration(t *testing.T) {
 			}, nil
 		},
 	}
-	c, err := NewTresoritClient(ServiceUrl, AdminUserId, AdminKey)
+	c, err := NewZeroKitAdminApiClient(ServiceUrl, AdminUserId, AdminKey)
 	if err != nil {
 		t.Fatal("cannot initialize tresorit client")
 	}
