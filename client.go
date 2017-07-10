@@ -34,11 +34,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/go-errors/errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
+	"errors"
 )
 
 const (
@@ -48,7 +48,7 @@ const (
 	ValidateUserRegistrationPath = "/api/v4/admin/user/validate-user-registration"
 )
 
-type TresoritClient struct {
+type ZeroKitAdminApiClient struct {
 	requestSigner
 	httpClient httpClient
 	ServiceUrl url.URL
@@ -58,8 +58,8 @@ type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-func NewTresoritClient(serviceUrl, adminUserId,
-	adminKey string) (*TresoritClient, error) {
+func NewZeroKitAdminApiClient(serviceUrl, adminUserId,
+	adminKey string) (*ZeroKitAdminApiClient, error) {
 	if serviceUrl == "" || adminKey == "" || adminUserId == "" {
 		return nil, errors.New("one or more arguments are empty")
 	}
@@ -69,7 +69,7 @@ func NewTresoritClient(serviceUrl, adminUserId,
 		return nil, errors.New(fmt.Sprintf("invalid service url: %s", serviceUrl))
 	}
 
-	return &TresoritClient{
+	return &ZeroKitAdminApiClient{
 		requestSigner: requestSigner{
 			adminKey:    adminKey,
 			adminUserId: adminUserId,
@@ -79,7 +79,7 @@ func NewTresoritClient(serviceUrl, adminUserId,
 	}, nil
 }
 
-func (c *TresoritClient) doSignedPost(urlPath string,
+func (c *ZeroKitAdminApiClient) doSignedPost(urlPath string,
 	body []byte) (*http.Response, error) {
 	endpoint := c.ServiceUrl
 	endpoint.Path = path.Join(endpoint.Path, urlPath)
@@ -90,7 +90,7 @@ func (c *TresoritClient) doSignedPost(urlPath string,
 	return c.SignAndDo(r)
 }
 
-func (c *TresoritClient) doSignedGet(urlPath string,
+func (c *ZeroKitAdminApiClient) doSignedGet(urlPath string,
 	query url.Values) (*http.Response, error) {
 	endpoint := c.ServiceUrl
 	endpoint.Path = path.Join(endpoint.Path, urlPath)
@@ -102,7 +102,7 @@ func (c *TresoritClient) doSignedGet(urlPath string,
 	return c.SignAndDo(r)
 }
 
-func (c *TresoritClient) SignAndDo(req *http.Request) (*http.Response, error) {
+func (c *ZeroKitAdminApiClient) SignAndDo(req *http.Request) (*http.Response, error) {
 	err := c.sign(req)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (c *TresoritClient) SignAndDo(req *http.Request) (*http.Response, error) {
 	return c.httpClient.Do(req)
 }
 
-func (c *TresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
+func (c *ZeroKitAdminApiClient) ListTresorMembers(tresorId string) ([]string, error) {
 	q := url.Values{}
 	q.Add("tresorid", tresorId)
 
@@ -132,7 +132,7 @@ func (c *TresoritClient) ListTresorMembers(tresorId string) ([]string, error) {
 	return m["Members"], nil
 }
 
-func (c *TresoritClient) InitUserRegistration() (*UserRegistrationData, error) {
+func (c *ZeroKitAdminApiClient) InitUserRegistration() (*UserRegistrationData, error) {
 	resp, err := c.doSignedPost(InitiateUserRegistrationPath, nil)
 	if err != nil {
 		return nil, err
@@ -154,7 +154,7 @@ type UserRegistrationData struct {
 	UserId          string `json:"UserId"`
 }
 
-func (c *TresoritClient) ApproveTresorCreation(tresorId string) error {
+func (c *ZeroKitAdminApiClient) ApproveTresorCreation(tresorId string) error {
 	m := map[string]string{"TresorId": tresorId}
 	body, err := json.Marshal(m)
 	if err != nil {
@@ -169,7 +169,7 @@ func (c *TresoritClient) ApproveTresorCreation(tresorId string) error {
 	return nil
 }
 
-func (c *TresoritClient) ValidateUserRegistration(zeroKitId, sessionId,
+func (c *ZeroKitAdminApiClient) ValidateUserRegistration(zeroKitId, sessionId,
 	sessionVerifier, validationVerifier string) error {
 	m := orderedMap{
 		{"RegSessionId", sessionId},

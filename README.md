@@ -8,11 +8,11 @@ For further information please see:
 
 - [ZeroKit encryption platform](https://tresorit.com/zerokit)
 - [ZeroKit management portal](https://manage.tresorit.io)
-- [Tresorit Admin API Reference](https://tresorit.com/zerokit/docs/admin_api/API_reference.html)
+- [ZeroKit Admin API Reference](https://tresorit.com/zerokit/docs/admin_api/API_reference.html)
 
-## Tresorit API
+## ZeroKit API
 
-Implemented Tresorit API methods:
+Implemented ZeroKit Admin API methods:
 
  - ListMembers
  - InitUserRegistration
@@ -36,7 +36,7 @@ import (
 )
 
 func main() {
-    client, err := zerokit.NewTresoritClient(
+    client, err := zerokit.NewZeroKitAdminApiClient(
         "https://example.api.tresorit.io",
         "admin@example.tresorit.io",
         "fsdfq34r2efe",
@@ -69,7 +69,8 @@ func main() {
 }
 ```
 
-Lists all members of the given tresor using implemented Tresorit API methods:
+Lists all members of the given tresor using implemented ZeroKit Admin API
+methods:
 
 ```go
 package main
@@ -80,7 +81,7 @@ import (
 )
 
 func main() {
-    client, err := zerokit.NewTresoritClient(
+    client, err := zerokit.NewZeroKitAdminApiClient(
         "https://example.api.tresorit.io",
         "admin@example.tresorit.io",
         "fsdfq34r2efe",
