@@ -1,5 +1,5 @@
+[![Build Status](https://travis-ci.org/gesundheitscloud/go-zerokit-api-client.svg?branch=master)](https://travis-ci.org/gesundheitscloud/go-zerokit-api-client)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c33f5a21aeaf497a85ebf9acfb797939)](https://www.codacy.com/app/theintz/go-zerokit-api-client?utm_source=github.com&utm_medium=referral&utm_content=gesundheitscloud/go-zerokit-api-client&utm_campaign=badger)
-[![Build Status](https://travis-ci.com/gesundheitscloud/go-zerokit-api-client.svg?token=phqzPcrEVgWxvsyLbP6L&branch=master)](https://travis-ci.com/gesundheitscloud/go-zerokit-api-client)
 [![codecov](https://codecov.io/gh/gesundheitscloud/go-zerokit-api-client/branch/master/graph/badge.svg)](https://codecov.io/gh/gesundheitscloud/go-zerokit-api-client)
 
 # ZeroKit Admin API client for Go
